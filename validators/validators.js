@@ -35,5 +35,18 @@ const validateAndReturnNumber = (value) => {
       password: validateAndReturnString(studentData.department),
     };
   };
+
+  const validateAndStructureAdminData = (adminData) => {
+    return {
+      name: validateAndReturnString(adminData.name),
+      password: validateAndReturnString(adminData.password),
+      imageUrl: validateAndReturnString(adminData.imageUrl),
+      email:validateAndReturnEmail(adminData.email),
+      hostel: validateAndReturnString(adminData.hostel),
+      phone: validateAndReturnString(adminData.phone),
+      username: validateAndReturnString(adminData.username),
+      otp: validateAndReturnString(adminData.otp)
+    };
+  };
   
-  module.exports = { validateAndReturnNumber, validateAndReturnString , validateAndStructureStudentData };
+  module.exports = { validateAndReturnNumber, validateAndReturnString , validateAndStructureStudentData, validateAndStructureAdminData };
