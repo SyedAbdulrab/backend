@@ -15,8 +15,8 @@ app.use(express.json());
 app.use('/mms/student', studentRoutes);
 
 // Routes
-app.get('/', (req, res) => {
-  res.send('mms routes working');
+app.get('/mms', (req, res) => {
+  res.redirect('/');
 });
 
 // Start the server

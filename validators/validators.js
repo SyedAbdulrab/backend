@@ -32,6 +32,7 @@ const validateAndReturnNumber = (value) => {
       phone: validateAndReturnString(studentData.phone),
       username: validateAndReturnString(studentData.username),
       password: validateAndReturnString(studentData.password),
+      password: validateAndReturnString(studentData.department),
     };
   };
   
