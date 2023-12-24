@@ -1,14 +1,119 @@
 // routes/adminRoutes.js
 const express = require("express");
-const router = express.Router();
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+// const app = express.Router();
 const adminService = require("../service/adminService");
 const { validateAndStructureAdminData } = require("../validators/validators");
+const Admin = require("../models/Admin");
+const cors = require('cors'); // Import the cors package
 
-router.get("/", (req, res) => {
+
+
+const app = express();
+
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+
+// Secret key for JWT
+const secretKey = 'your-secret-key';
+const blacklistedTokens = new Set();
+
+// ======================= MIDDLEWARES ===============================
+const validateTokenMiddleware = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ message: "Authorization header is missing" });
+  }
+
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    req.userId = decoded.userId;
+    next();
+  });
+};
+
+// Middleware to check if the token is blacklisted
+const isTokenBlacklisted = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (blacklistedTokens.has(token)) {
+    return res.status(401).json({ message: 'Token has been blacklisted' });
+  }
+
+  next();
+};
+
+// ============= AUTH ROUTES  START ==========/
+
+app.post('/signup-admin', async (req, res) => {
+  console.log(req.body);
+  const { username, password } = req.body;
+
+  try {
+    const newUser = new Admin({ username, password });
+    await newUser.save();
+
+    const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/login-admin', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Check if the user exists in MongoDB
+    const user = await Admin.findOne({ username });
+
+    if (user && (user.password == password)) {
+      // Generate a JWT token
+      const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
+      res.json({ token });
+    } else {
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/logout-admin', validateTokenMiddleware, (req, res) => {
+  const token = req.headers.authorization;
+  
+  // Add the token to the blacklist
+  blacklistedTokens.add(token);
+  
+  res.json({ message: 'Logout successful' });
+});
+
+app.get(
+  "/validate_token_admin",
+  validateTokenMiddleware,
+  isTokenBlacklisted,
+  (req, res) => {
+    // If the middleware succeeds, the token is valid & IS NOT BLACKLISTED, and req.userId is available
+    res.json({ message: "Token is valid", userId: req.userId });
+  }
+);
+
+// ============= AUTH ROUTES - END ==========/
+
+app.get("/", (req, res) => {
   res.send("Admin routes Working");
 });
 
-router.post("/admins", async (req, res) => {
+app.post("/admins", async (req, res) => {
   try {
     const adminData = req.body;
 
@@ -23,7 +128,7 @@ router.post("/admins", async (req, res) => {
   }
 });
 
-router.get("/admins", async (req, res) => {
+app.get("/admins", async (req, res) => {
   try {
     const admins = await adminService.getAllAdmins();
     res.status(200).json(admins);
@@ -33,7 +138,7 @@ router.get("/admins", async (req, res) => {
   }
 });
 
-router.delete("/admins/:adminId", async (req, res) => {
+app.delete("/admins/:adminId", async (req, res) => {
   try {
     const { adminId } = req.params;
 
@@ -55,7 +160,7 @@ router.delete("/admins/:adminId", async (req, res) => {
   }
 });
 
-router.put("/admins/:adminId", async (req, res) => {
+app.put("/admins/:adminId", async (req, res) => {
   try {
     const { adminId } = req.params;
     const updatedData = req.body;
@@ -86,7 +191,7 @@ router.put("/admins/:adminId", async (req, res) => {
 ///---------------STUDENTS------------------///
 
 // Route to get all students
-router.get('/students', async (req, res) => {
+app.get('/students', async (req, res) => {
   try {
     const allStudents = await adminService.getAllStudents();
     res.status(200).json(allStudents);
@@ -99,7 +204,7 @@ router.get('/students', async (req, res) => {
 
 // Route to get students by hostel name
 
-router.get('/students/:hostelName', async (req, res) => {
+app.get('/students/:hostelName', async (req, res) => {
   try {
     const { hostelName } = req.params;
     const studentsInHostel = await adminService.getStudentsByHostel(hostelName);
@@ -112,7 +217,7 @@ router.get('/students/:hostelName', async (req, res) => {
 });
 
 //endpoint to get a single student
-router.get('/students/:studentId', async (req, res) => {
+app.get('/students/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     const student = await adminService.getStudentById(studentId);
@@ -130,7 +235,7 @@ router.get('/students/:studentId', async (req, res) => {
 
 
 // admin route to create a student
-router.post('/students', async (req, res) => {
+app.post('/students', async (req, res) => {
   try {
     const studentData = req.body;
     const createdStudent = await studentService.createStudent(studentData);
@@ -142,7 +247,7 @@ router.post('/students', async (req, res) => {
 })
 
 // admin route to delete a student
-router.delete('/students/:studentId', async (req, res) => {
+app.delete('/students/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     const deletedStudent = await adminService.deleteStudentById(studentId);
@@ -159,7 +264,7 @@ router.delete('/students/:studentId', async (req, res) => {
 });
 
 // Route to update a student by ID
-router.put('/students/:studentId', async (req, res) => {
+app.put('/students/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     const updatedData = req.body;
@@ -177,4 +282,4 @@ router.put('/students/:studentId', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = app;
