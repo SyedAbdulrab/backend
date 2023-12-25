@@ -24,6 +24,14 @@ const getAllStudents = async () => {
     }
 };
 
+const getStudentByEmailPass = async (email,password)=>{
+  try{
+    const student = await Student.findOne( {email,password});
+    return student;
+  } catch (error) {
+  throw error;
+}
+}
 
 const updateStudentDetails = async (studentId, newDetails) => {
     try {
@@ -54,5 +62,6 @@ const updateStudentDetails = async (studentId, newDetails) => {
 
 module.exports = {
   createStudent,
-  getAllStudents
+  getAllStudents,
+  getStudentByEmailPass,
 };

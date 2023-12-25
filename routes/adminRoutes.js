@@ -112,10 +112,10 @@ router.get('/students/:hostelName', async (req, res) => {
 });
 
 //endpoint to get a single student
-router.get('/students/:studentId', async (req, res) => {
+router.get('/student/:id', async (req, res) => {
   try {
-    const { studentId } = req.params;
-    const student = await adminService.getStudentById(studentId);
+    const id  = req.params.id;
+    const student = await adminService.getStudentById(id);
 
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
@@ -133,7 +133,7 @@ router.get('/students/:studentId', async (req, res) => {
 router.post('/students', async (req, res) => {
   try {
     const studentData = req.body;
-    const createdStudent = await studentService.createStudent(studentData);
+    const createdStudent = await adminService.createStudent(studentData);
     res.status(201).json(createdStudent);
   } catch (error) {
     console.error(error);
@@ -173,6 +173,52 @@ router.put('/students/:studentId', async (req, res) => {
     res.status(200).json({ message: 'Student updated successfully', updatedStudent });
   } catch (error) {
     console.error('Error updating student by ID:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+// ------------ Mess Menu -------------------
+
+  // Route to get mess menu
+router.get('/messmenu', async (req, res) => {
+  try {
+    const menu = await adminService.getMessMenu();
+    res.status(200).json(menu);
+  } catch (error) {
+    console.error('Error getting mess menu:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+  // Route to create a mess menu
+  router.post('/messmenu', async (req, res) => {
+    try {
+      const menuData = req.body;
+      const createdMenu = await adminService.createMessMenu(menuData);
+      res.status(201).json(createdMenu);
+      res.send(menuData);
+    } catch (error) {
+      console.error('Error creating mess menu:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+// Route to update a mess menu by day
+router.put('/messmenu/:dayOfWeek', async (req, res) => {
+  try {
+    const { dayOfWeek } = req.params;
+    const updatedMenu = req.body;
+
+    const updatedMenuEntry = await adminService.updateMessMenuByDay(dayOfWeek, updatedMenu);
+
+    if (!updatedMenuEntry) {
+      return res.status(404).json({ error: 'Mess menu not found for the specified day' });
+    }
+
+    res.status(200).json(updatedMenuEntry);
+  } catch (error) {
+    console.error('Error updating mess menu:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

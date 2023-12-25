@@ -5,6 +5,7 @@ const {
 } = require("../validators/validators");
 const Admin = require("../models/Admin");
 const Student = require("../models/Student");
+const MessMenu = require("../models/MessMenu");
 
 const createAdmin = async (adminData) => {
   try {
@@ -50,11 +51,11 @@ const updateAdminById = async (adminId, updatedData) => {
 
 const createStudent = async (studentData) => {
   try {
-    console.log(studentData);
     const validatedData = validateAndStructureStudentData(studentData);
     console.log(validatedData);
     const newStudent = new Student(validatedData);
     const savedStudent = await newStudent.save();
+    console.log("Student Created");
     return savedStudent;
   } catch (error) {
     throw error;
@@ -106,6 +107,45 @@ const updateStudentById = async (studentId, updatedData) => {
   }
 };
 
+
+// Service functions for mess menu
+
+// Function to create a mess menu
+const createMessMenu = async (menuData) => {
+  try {
+    const messMenu = new MessMenu(menuData);
+    const createdMenu = await messMenu.save();
+    console.log("---------------------------------");
+    console.log(menuData);
+    return 'ok';
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Function to update a mess menu by day
+const updateMessMenuByDay = async (dayOfWeek, updatedMenu) => {
+  try {
+    const updatedMenuEntry = await MessMenu.findOneAndUpdate(
+      { dayOfWeek },
+      { menu: updatedMenu },
+      { new: true }
+    );
+    return updatedMenuEntry;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getMessMenu = async () => {
+  try {
+    const menu = await MessMenu.find();
+    return menu;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   createAdmin,
   getAllAdmins,
@@ -116,5 +156,8 @@ module.exports = {
   getStudentById,
   createStudent,
   deleteStudentById,
-  updateStudentById
+  updateStudentById,
+  createMessMenu,
+  updateMessMenuByDay,
+  getMessMenu,
 };

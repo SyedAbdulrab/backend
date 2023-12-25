@@ -30,6 +30,19 @@ router.get('/students', async (req, res) => {
     }
   });
 
+router.get("/:email/:password", async (req,res)=>{
+  try{
+    const email = req.params.email;
+    const password = req.params.password;
+
+    const student = await studentService.getStudentByEmailPass(email,password);
+    res.json(student);
+  } catch(error){
+      console.error('Error updating student details:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
 router.put('/students/:id', async (req, res) => {
     try {
       const studentId = req.params.id;
