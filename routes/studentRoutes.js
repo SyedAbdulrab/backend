@@ -1,34 +1,140 @@
 // routes/studentRoutes.js
-const express = require('express');
-const router = express.Router();
-const studentService = require('../service/studentService');
+const express = require("express");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+const cors = require("cors");
+// const app = express.Router();
+const studentService = require("../service/studentService");
+const Student = require("../models/Student");
 
+const app = express();
 
-router.get('/', (req, res) => {
-    res.send('Student routes Working');
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+
+// Secret key for JWT
+const secretKey = "your-secret-key";
+const blacklistedTokens = new Set();
+
+// ======================= MIDDLEWARES ===============================
+const validateTokenMiddleware = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ message: "Authorization header is missing" });
+  }
+
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    req.userId = decoded.userId;
+    next();
+  });
+};
+
+// Middleware to check if the token is blacklisted
+const isTokenBlacklisted = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (blacklistedTokens.has(token)) {
+    return res.status(401).json({ message: "Token has been blacklisted" });
+  }
+
+  next();
+};
+
+// ============= AUTH ROUTES  START ==========/
+
+app.post("/signup-student", async (req, res) => {
+  console.log(req.body);
+  const { username, password } = req.body;
+
+  try {
+    const newUser = new Student({ username, password });
+    await newUser.save();
+
+    const token = jwt.sign({ userId: newUser._id }, secretKey, {
+      expiresIn: "1h",
+    });
+    res.json({ token });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.post("/login-student", async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Check if the user exists in MongoDB
+    const user = await Student.findOne({ username });
+
+    if (user && user.password == password) {
+      // Generate a JWT token
+      const token = jwt.sign({ userId: user._id }, secretKey, {
+        expiresIn: "1h",
+      });
+      res.json({ token });
+    } else {
+      res.status(401).json({ message: "Invalid credentials" });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.post("/logout-student", validateTokenMiddleware, (req, res) => {
+  const token = req.headers.authorization;
+
+  // Add the token to the blacklist
+  blacklistedTokens.add(token);
+
+  res.json({ message: "Logout successful" });
+});
+
+app.get(
+  "/validate_token_student",
+  validateTokenMiddleware,
+  isTokenBlacklisted,
+  (req, res) => {
+    // If the middleware succeeds, the token is valid & IS NOT BLACKLISTED, and req.userId is available
+    res.json({ message: "Token is valid", userId: req.userId });
+  }
+);
+
+// ============= AUTH ROUTES - END ==========/
+
+app.get("/", (req, res) => {
+  res.send("Student routes Working");
 });
 
 // Route to create a new student
-router.post('/students', async (req, res) => {
+app.post("/students", async (req, res) => {
   try {
     const studentData = req.body;
     const createdStudent = await studentService.createStudent(studentData);
     res.status(201).json(createdStudent);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send("Internal Server Error");
   }
 });
 
-router.get('/students', async (req, res) => {
-    try {
-      const allStudents = await studentService.getAllStudents();
-      res.json(allStudents);
-    } catch (error) {
-      console.error('Error fetching all students:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
+app.get("/students", async (req, res) => {
+  try {
+    const allStudents = await studentService.getAllStudents();
+    res.json(allStudents);
+  } catch (error) {
+    console.error("Error fetching all students:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 router.get("/:email/:password", async (req,res)=>{
   try{
@@ -43,19 +149,22 @@ router.get("/:email/:password", async (req,res)=>{
   }
 })
 
-router.put('/students/:id', async (req, res) => {
-    try {
-      const studentId = req.params.id;
-      const { phone, imageUrl } = req.body;
-  
-      // Validate and structure the data as needed
-  
-      const updatedStudent = await studentService.updateStudentDetails(studentId, { phone, imageUrl });
-      res.json(updatedStudent);
-    } catch (error) {
-      console.error('Error updating student details:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
+app.put("/students/:id", async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const { phone, imageUrl } = req.body;
 
-module.exports = router;
+    // Validate and structure the data as needed
+
+    const updatedStudent = await studentService.updateStudentDetails(
+      studentId,
+      { phone, imageUrl }
+    );
+    res.json(updatedStudent);
+  } catch (error) {
+    console.error("Error updating student details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+module.exports = app;
