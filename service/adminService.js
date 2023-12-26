@@ -123,19 +123,30 @@ const createMessMenu = async (menuData) => {
   }
 };
 
-// Function to update a mess menu by day
-const updateMessMenuByDay = async (dayOfWeek, updatedMenu) => {
+const updateMessMenu = async (id, updatedMenu, newDay) => {
   try {
-    const updatedMenuEntry = await MessMenu.findOneAndUpdate(
-      { dayOfWeek },
-      { menu: updatedMenu },
-      { new: true }
-    );
-    return updatedMenuEntry;
+    // console.log("UpdatedMenu : ", updatedMenu);
+    // console.log("updatedDay : ", newDay);
+    // console.log("ID is :", id)
+    
+    // console.log("breakfast :", updatedMenu.breakfast)
+    // console.log("lunch :", updatedMenu.lunch)
+    // console.log("Dinner :", updatedMenu.dinner)
+
+
+    const messMenu = await MessMenu.findById(id)
+    //  First delete the whole object of messMenu from MongoDB Atlas and then hit this by new day 
+    // messMenu.dayOfWeek = newDay;
+    messMenu.menu.breakfast = updatedMenu.breakfast;
+    messMenu.menu.lunch = updatedMenu.lunch;
+    messMenu.menu.dinner = updatedMenu.dinner;
+    messMenu.save();
+    return messMenu;
   } catch (error) {
     throw error;
   }
 };
+
 
 const getMessMenu = async () => {
   try {
@@ -157,7 +168,7 @@ module.exports = {
   createStudent,
   deleteStudentById,
   updateStudentById,
-  createMessMenu,
-  updateMessMenuByDay,
+  createMessMenu,  
+  updateMessMenu,
   getMessMenu,
 };

@@ -136,7 +136,7 @@ app.get("/students", async (req, res) => {
   }
 });
 
-router.get("/:email/:password", async (req,res)=>{
+app.get("/:email/:password", async (req,res)=>{
   try{
     const email = req.params.email;
     const password = req.params.password;

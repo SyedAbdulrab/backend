@@ -282,4 +282,54 @@ app.put('/students/:studentId', async (req, res) => {
   }
 });
 
+
+// ------------ Mess Menu -------------------
+
+// Route to get mess menu
+app.get('/messmenu', async (req, res) => {
+  try {
+    const menu = await adminService.getMessMenu();
+    res.status(200).json(menu);
+  } catch (error) {
+    console.error('Error getting mess menu:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+  // Route to create a mess menu
+  app.post('/messmenu', async (req, res) => {
+    try {
+      const menuData = req.body;
+      const createdMenu = await adminService.createMessMenu(menuData);
+      res.status(201).json(createdMenu);
+      res.send(menuData);
+    } catch (error) {
+      console.error('Error creating mess menu:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+  app.put('/messmenu/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedMenu = req.body;
+      const newDay = updatedMenu['day'];
+  
+      // console.log('Received request with data:', { id, updatedMenu, newDay });
+  
+      const updatedMenuEntry = await adminService.updateMessMenu(id, updatedMenu, newDay);
+  
+      if (!updatedMenuEntry) {
+        return res.status(404).json({ error: 'Mess menu not found for the specified day' });
+      }
+  
+      res.status(200).json(updatedMenuEntry);
+    } catch (error) {
+      console.error('Error updating mess menu:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
+
+
 module.exports = app;
