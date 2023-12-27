@@ -58,10 +58,55 @@ const updateStudentDetails = async (studentId, newDetails) => {
   };
 
 
+// Route for mess off request
+
+const updateMealTypesById = async (id, day, mealtype) => {
+  try {
+    // Find the student by ID
+    const student = await Student.findById(id);
+
+    if (!student) {
+      throw new Error('Student not found');
+    }
+
+    // Find the calendar entry for the specified day
+    const dayIndex = day - 1; // Assuming days are 1-indexed
+    const calendarEntry = student.calendar.days[dayIndex];
+
+    if (!calendarEntry) {
+      throw new Error('Invalid day');
+    }
+
+    // Update the meal type based on the selected meal
+    switch (mealtype) {
+      case 'breakfast':
+        calendarEntry.breakfast = 'A'; // Set 'A' for attended, modify as needed
+        break;
+      case 'lunch':
+        calendarEntry.lunch = 'A';
+        break;
+      case 'dinner':
+        calendarEntry.dinner = 'A';
+        break;
+      default:
+        throw new Error('Invalid mealtype');
+    }
+
+    // Save the updated student document
+    await student.save();
+
+    // Return the updated calendar
+    return student.calendar;
+  } catch (error) {
+    throw error;
+  }
+};
+
   
 
 module.exports = {
   createStudent,
   getAllStudents,
   getStudentByEmailPass,
+  updateMealTypesById
 };

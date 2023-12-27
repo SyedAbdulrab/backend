@@ -167,4 +167,26 @@ app.put("/students/:id", async (req, res) => {
   }
 });
 
+// Update meal types for a specific day of a student's calendar using ID
+app.put('/:id/calendar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { day, mealtype } = req.body;
+
+    // Validate input
+    if (!day || !mealtype) {
+      return res.status(400).json({ error: 'Invalid input. Both day and mealtype are required.' });
+    }
+
+    // Call the service function to update the calendar
+    const updatedCalendar = await studentService.updateMealTypesById(id, day, mealtype);
+
+    // Respond with the updated calendar
+    res.status(200).json(updatedCalendar);
+  } catch (error) {
+    console.error('Error updating meal types:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 module.exports = app;

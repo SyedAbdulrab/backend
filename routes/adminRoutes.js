@@ -2,12 +2,10 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
-// const app = express.Router();
 const adminService = require("../service/adminService");
 const { validateAndStructureAdminData } = require("../validators/validators");
 const Admin = require("../models/Admin");
 const cors = require('cors'); // Import the cors package
-
 
 
 const app = express();
@@ -31,7 +29,7 @@ const validateTokenMiddleware = (req, res, next) => {
 
   jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
-      return res.status(401).json({ message: "Invalid token" });
+      return res.json({ message: "Invalid token" });
     }
 
     req.userId = decoded.userId;
@@ -128,6 +126,17 @@ app.post("/admins", async (req, res) => {
   }
 });
 
+app.get("/admins/:id", async (req, res) => {
+  try {
+    const id  = req.params.id;
+    const admin = await adminService.getAdminByID(id);
+    res.status(200).json(admin);
+  } catch (error) {
+    console.error("Error fetching admins:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.get("/admins", async (req, res) => {
   try {
     const admins = await adminService.getAllAdmins();
@@ -160,20 +169,12 @@ app.delete("/admins/:adminId", async (req, res) => {
   }
 });
 
-app.put("/admins/:adminId", async (req, res) => {
+app.put("/admins/:id", async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const { id } = req.params;
     const updatedData = req.body;
 
-    // Check if adminId is a valid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(adminId)) {
-      return res.status(400).json({ error: "Invalid adminId" });
-    }
-
-    const updatedAdmin = await adminService.updateAdminById(
-      adminId,
-      updatedData
-    );
+    const updatedAdmin = await adminService.updateAdminById(id, updatedData);
 
     if (!updatedAdmin) {
       return res.status(404).json({ error: "Admin not found" });
@@ -204,22 +205,23 @@ app.get('/students', async (req, res) => {
 
 // Route to get students by hostel name
 
-app.get('/students/:hostelName', async (req, res) => {
-  try {
-    const { hostelName } = req.params;
-    const studentsInHostel = await adminService.getStudentsByHostel(hostelName);
+// app.get('/students/:hostelName', async (req, res) => {
+//   try {
+//     const { hostelName } = req.params;
+//     const studentsInHostel = await adminService.getStudentsByHostel(hostelName);
 
-    res.status(200).json(studentsInHostel);
-  } catch (error) {
-    console.error('Error getting students by hostel name:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+//     res.status(200).json(studentsInHostel);
+//   } catch (error) {
+//     console.error('Error getting students by hostel name:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
 //endpoint to get a single student
-app.get('/students/:studentId', async (req, res) => {
+app.get('/students/:id', async (req, res) => {
   try {
     const id  = req.params.id;
+    console.log(id);
     const student = await adminService.getStudentById(id);
 
     if (!student) {

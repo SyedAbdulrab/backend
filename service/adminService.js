@@ -18,6 +18,15 @@ const createAdmin = async (adminData) => {
   }
 };
 
+const getAdminByID = async (id) => {
+  try {
+    const admin = await Admin.findById(id);
+    return admin;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const getAllAdmins = async () => {
   try {
     const admins = await Admin.find();
@@ -171,4 +180,5 @@ module.exports = {
   createMessMenu,  
   updateMessMenu,
   getMessMenu,
+  getAdminByID
 };
