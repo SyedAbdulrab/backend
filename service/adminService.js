@@ -116,6 +116,44 @@ const updateStudentById = async (studentId, updatedData) => {
   }
 };
 
+const getMessOffStdsByDate = async (date)=>{
+  try{
+    const students = await getAllStudents();
+    const breakfast = [];
+    const lunch = [];
+    const dinner = [];
+    for(let i=0; i<students.length; i++){
+      for(let j=0; j<students[i].calendar.days.length; j++){
+        if(students[i].calendar.days[j].day == date){
+          if(students[i].calendar.days[j].breakfast == 'A'){
+            breakfast.push(students[i]);
+          }if(students[i].calendar.days[j].lunch == 'A'){
+            lunch.push(students[i]);
+          }if(students[i].calendar.days[j].dinner == 'A'){
+            dinner.push(students[i]);
+          }
+        }
+      }
+    }
+    console.log('---------------------------------------------');
+    console.log("Breakfast Defaulter")
+    console.log(breakfast)
+    console.log("Lunch Defaulter")
+    console.log(lunch)
+    console.log("Dinner Defaulter")
+    console.log(dinner)
+    
+    const messOffStudents = [
+      {breakfast: breakfast},
+      {lunch: lunch},
+      {dinner: dinner}
+    ]
+    return messOffStudents;
+  } catch (error) {
+    throw error;
+  }
+}
+
 
 // Service functions for mess menu
 
@@ -134,18 +172,7 @@ const createMessMenu = async (menuData) => {
 
 const updateMessMenu = async (id, updatedMenu, newDay) => {
   try {
-    // console.log("UpdatedMenu : ", updatedMenu);
-    // console.log("updatedDay : ", newDay);
-    // console.log("ID is :", id)
-    
-    // console.log("breakfast :", updatedMenu.breakfast)
-    // console.log("lunch :", updatedMenu.lunch)
-    // console.log("Dinner :", updatedMenu.dinner)
-
-
     const messMenu = await MessMenu.findById(id)
-    //  First delete the whole object of messMenu from MongoDB Atlas and then hit this by new day 
-    // messMenu.dayOfWeek = newDay;
     messMenu.menu.breakfast = updatedMenu.breakfast;
     messMenu.menu.lunch = updatedMenu.lunch;
     messMenu.menu.dinner = updatedMenu.dinner;
@@ -180,5 +207,6 @@ module.exports = {
   createMessMenu,  
   updateMessMenu,
   getMessMenu,
-  getAdminByID
+  getAdminByID,
+  getMessOffStdsByDate
 };

@@ -29,7 +29,7 @@ const studentSchema = new mongoose.Schema({
   email:{type:String},
   hostel: { type: String, required: true },
   batch:{type: String,required: true },
-  room:{type: String,required:true},
+  room:{type: String,required:true},  
   phone: { type: String },
   calendar: { type: calendarSchema, default: { days: defaultCalendar } }, // Include the Calendar schema here
   username: { type: String, required: true, unique: true },

@@ -298,6 +298,23 @@ app.get('/messmenu', async (req, res) => {
   }
 });
 
+// Route to get the students with specified Day mess off
+app.get('/messOffStudents/:day', async(req,res)=>{
+  try {
+    const { day } = req.params;
+    const messOffStudents = await adminService.getMessOffStdsByDate(day);
+
+    if (!messOffStudents) {
+      return res.status(404).json({ error: 'Mess off students not found for the specified day' });
+    }
+
+    res.status(200).json(messOffStudents);
+  } catch (error) {
+    console.error('Error fetching mess off students:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
   // Route to create a mess menu
   app.post('/messmenu', async (req, res) => {
     try {

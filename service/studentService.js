@@ -2,6 +2,21 @@
 const { validateAndStructureStudentData } = require('../validators/validators');
 const Student = require('../models/Student');
 
+
+// Function to get a student by ID
+const getStudentById = async (studentId) => {
+  try {
+    // Use your Student model to find the student by ID in the database
+    const student = await Student.findById(studentId);
+
+    // Return the student if found, otherwise return null
+    return student;
+  } catch (error) {
+    console.error('Error getting student by ID:', error);
+    throw error; // You might want to handle this error in a better way in a production environment
+  }
+};
+
 const createStudent = async (studentData) => {
     try {
         console.log(studentData)
@@ -13,6 +28,17 @@ const createStudent = async (studentData) => {
     } catch (error) {
       throw error;
     }
+};
+
+const updateStudentById = async (studentId, updatedData) => {
+  try {
+    const updatedStudent = await Student.findByIdAndUpdate(studentId, updatedData, {
+      new: true,
+    });
+    return updatedStudent;
+  } catch (error) {
+    throw error;
+  }
 };
 
 const getAllStudents = async () => {
@@ -108,5 +134,7 @@ module.exports = {
   createStudent,
   getAllStudents,
   getStudentByEmailPass,
-  updateMealTypesById
+  updateMealTypesById,
+  getStudentById,
+  updateStudentById
 };

@@ -114,6 +114,24 @@ app.get("/", (req, res) => {
   res.send("Student routes Working");
 });
 
+// Route to get a student by ID
+app.get("/students/:id", async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const student = await studentService.getStudentById(studentId);
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.status(200).json(student);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+
 // Route to create a new student
 app.post("/students", async (req, res) => {
   try {
@@ -152,15 +170,15 @@ app.get("/:email/:password", async (req,res)=>{
 app.put("/students/:id", async (req, res) => {
   try {
     const studentId = req.params.id;
-    const { phone, imageUrl } = req.body;
+    const updatedData = req.body;
 
     // Validate and structure the data as needed
 
-    const updatedStudent = await studentService.updateStudentDetails(
-      studentId,
-      { phone, imageUrl }
-    );
-    res.json(updatedStudent);
+    const updatedStudent = await studentService.updateStudentById(studentId , updatedData);
+    if (!updatedStudent) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+    res.status(200).json(updatedStudent);
   } catch (error) {
     console.error("Error updating student details:", error);
     res.status(500).json({ error: "Internal Server Error" });
