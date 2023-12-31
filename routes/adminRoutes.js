@@ -1,4 +1,5 @@
 // routes/adminRoutes.js
+const bcrypt = require('bcrypt');
 const express = require("express");
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
@@ -51,11 +52,14 @@ const isTokenBlacklisted = (req, res, next) => {
 // ============= AUTH ROUTES  START ==========/
 
 app.post('/signup-admin', async (req, res) => {
-  console.log(req.body);
   const { username, password } = req.body;
 
   try {
-    const newUser = new Admin({ username, password });
+    // Hash the password using bcrypt
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new Admin with the hashed password
+    const newUser = new Admin({ username, password: hashedPassword });
     await newUser.save();
 
     const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1h' });
@@ -73,8 +77,8 @@ app.post('/login-admin', async (req, res) => {
     // Check if the user exists in MongoDB
     const user = await Admin.findOne({ username });
 
-    if (user && (user.password == password)) {
-      // Generate a JWT token
+    if (user && (await bcrypt.compare(password, user.password))) {
+      // Password is correct, generate a JWT token
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
       res.json({ token });
     } else {
@@ -240,6 +244,13 @@ app.get('/students/:id', async (req, res) => {
 app.post('/students', async (req, res) => {
   try {
     const studentData = req.body;
+    
+    // Hash the password using bcrypt
+    const hashedPassword = await bcrypt.hash(studentData.password, 10);
+    
+    // Replace the plain password with the hashed password
+    studentData.password = hashedPassword;
+
     const createdStudent = await adminService.createStudent(studentData);
     res.status(201).json(createdStudent);
   } catch (error) {

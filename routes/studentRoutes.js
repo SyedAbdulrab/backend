@@ -1,5 +1,6 @@
 // routes/studentRoutes.js
 const express = require("express");
+const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
@@ -50,11 +51,14 @@ const isTokenBlacklisted = (req, res, next) => {
 // ============= AUTH ROUTES  START ==========/
 
 app.post("/signup-student", async (req, res) => {
-  console.log(req.body);
   const { username, password } = req.body;
 
   try {
-    const newUser = new Student({ username, password });
+    // Hash the password using bcrypt
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new Student with the hashed password
+    const newUser = new Student({ username, password: hashedPassword });
     await newUser.save();
 
     const token = jwt.sign({ userId: newUser._id }, secretKey, {
@@ -74,8 +78,8 @@ app.post("/login-student", async (req, res) => {
     // Check if the user exists in MongoDB
     const user = await Student.findOne({ username });
 
-    if (user && user.password == password) {
-      // Generate a JWT token
+    if (user && (await bcrypt.compare(password, user.password))) {
+      // Password is correct, generate a JWT token
       const token = jwt.sign({ userId: user._id }, secretKey, {
         expiresIn: "1h",
       });
